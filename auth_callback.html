@@ -129,45 +129,47 @@
     </div>
 
     <script>
-        // ⚠️ IMPORTANT: Replace with your actual Supabase URL and Anon Key
-        const SUPABASE_URL = 'https://zhflwgfzshtqcfwsvnnv.supabase.co'; // e.g., 'https://abcdefghijk.supabase.co'
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI'; // e.g., 'eyJhbGciOiJIUzI1Ni...'
+        document.addEventListener('DOMContentLoaded', async () => { // Made async to use await inside
+            // ⚠️ IMPORTANT: Replace with your actual Supabase URL and Anon Key
+            const SUPABASE_URL = 'https://zhflwgfzshtqcfwsvnnv.supabase.co'; // e.g., 'https://abcdefghijk.supabase.co'
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI'; // e.g., 'eyJhbGciOiJIUzI1Ni...'
 
-        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            // Initialize Supabase client ONLY after DOM is loaded and SDK is available
+            const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const mainTitle = document.getElementById('mainTitle');
-        const messageElement = document.getElementById('message');
-        const passwordResetForm = document.getElementById('passwordResetForm');
-        const newPasswordInput = document.getElementById('newPassword');
-        const confirmPasswordInput = document.getElementById('confirmPassword');
-        const resetPasswordButton = document.getElementById('resetPasswordButton');
-        const openAppButton = document.getElementById('openAppButton');
-        const goToLoginButton = document.getElementById('goToLoginButton');
+            const mainTitle = document.getElementById('mainTitle');
+            const messageElement = document.getElementById('message');
+            const passwordResetForm = document.getElementById('passwordResetForm');
+            const newPasswordInput = document.getElementById('newPassword');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const resetPasswordButton = document.getElementById('resetPasswordButton');
+            const openAppButton = document.getElementById('openAppButton');
+            const goToLoginButton = document.getElementById('goToLoginButton');
 
-        // Base deep link for your app's authentication entry point
-        const APP_DEEP_LINK_BASE = 'com.example.kadazon://auth';
+            // Base deep link for your app's authentication entry point
+            const APP_DEEP_LINK_BASE = 'com.example.kadazon://auth';
 
-        function showMessage(msg, type = 'info') {
-            messageElement.textContent = msg;
-            messageElement.classList.remove('loading', 'error', 'success');
-            messageElement.classList.add(type);
-        }
+            function showMessage(msg, type = 'info') {
+                messageElement.textContent = msg;
+                messageElement.classList.remove('loading', 'error', 'success');
+                messageElement.classList.add(type);
+            }
 
-        function redirectToApp(type = 'login_success') {
-            const deepLink = `${APP_DEEP_LINK_BASE}?type=${type}`;
-            openAppButton.href = deepLink;
-            goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login`; // Always provide a way to login
-            
-            openAppButton.style.display = 'block';
-            goToLoginButton.style.display = 'block';
+            function redirectToApp(type = 'login_success') {
+                const deepLink = `${APP_DEEP_LINK_BASE}?type=${type}`;
+                openAppButton.href = deepLink;
+                goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login`; // Always provide a way to login
+                
+                openAppButton.style.display = 'block';
+                goToLoginButton.style.display = 'block';
 
-            // Attempt to open the app automatically
-            setTimeout(() => {
-                window.location.href = deepLink;
-            }, 1000); // Small delay to allow message to be seen
-        }
+                // Attempt to open the app automatically
+                setTimeout(() => {
+                    window.location.href = deepLink;
+                }, 1000); // Small delay to allow message to be seen
+            }
 
-        async function handleAuthCallback() {
+            // Moved handleAuthCallback logic here
             const params = new URLSearchParams(window.location.search);
             const error = params.get('error');
             const errorCode = params.get('error_code');
@@ -203,20 +205,10 @@
                     }
 
                     // Session successfully established. Now check the event type.
-                    // Supabase's `onAuthStateChange` listener might indicate 'PASSWORD_RECOVERY'
-                    // or the session itself might be temporary.
                     // For password recovery, the user is now "logged in" with a temporary session
                     // that allows password update.
                     const user = data.user;
                     if (user) {
-                        // Check the event type from the URL, or infer from user state
-                        // For password recovery, the user is usually logged in but needs to set a new password.
-                        // For email confirmation, the user is logged in and email is confirmed.
-                        // Supabase's internal redirect for password reset often just sends 'code'.
-                        // We infer password reset if we have a session from a 'code' and no other specific type.
-                        
-                        // If the current session is for password recovery, `data.session.user` will be non-null
-                        // and the user can update their password.
                         mainTitle.textContent = 'Set New Password';
                         showMessage('Please enter your new password below.', 'info');
                         passwordResetForm.style.display = 'block';
@@ -247,49 +239,47 @@
                 goToLoginButton.style.display = 'block';
                 goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login`;
             }
-        }
 
-        async function handlePasswordReset() {
-            const newPassword = newPasswordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
+            async function handlePasswordReset() {
+                const newPassword = newPasswordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
 
-            if (!newPassword || !confirmPassword) {
-                showMessage('Please fill in both password fields.', 'error');
-                return;
-            }
-            if (newPassword !== confirmPassword) {
-                showMessage('Passwords do not match.', 'error');
-                return;
-            }
-            if (newPassword.length < 6) { // Basic validation
-                showMessage('Password must be at least 6 characters long.', 'error');
-                return;
-            }
-
-            resetPasswordButton.disabled = true;
-            showMessage('Setting new password...', 'loading');
-
-            try {
-                const { error } = await supabase.auth.updateUser({ password: newPassword });
-
-                if (error) {
-                    showMessage(`Failed to set password: ${error.message}. Please try again.`, 'error');
-                    console.error('Password update error:', error);
-                } else {
-                    mainTitle.textContent = 'Password Successfully Reset!';
-                    showMessage('Your password has been changed. You can now log in with your new password.', 'success');
-                    passwordResetForm.style.display = 'none'; // Hide the form
-                    redirectToApp('login_success'); // Redirect to app's login page
+                if (!newPassword || !confirmPassword) {
+                    showMessage('Please fill in both password fields.', 'error');
+                    return;
                 }
-            } catch (e) {
-                showMessage(`An unexpected error occurred: ${e.message}.`, 'error');
-                console.error('Password update exception:', e);
-            } finally {
-                resetPasswordButton.disabled = false;
-            }
-        }
+                if (newPassword !== confirmPassword) {
+                    showMessage('Passwords do not match.', 'error');
+                    return;
+                }
+                if (newPassword.length < 6) { // Basic validation
+                    showMessage('Password must be at least 6 characters long.', 'error');
+                    return;
+                }
 
-        document.addEventListener('DOMContentLoaded', handleAuthCallback);
+                resetPasswordButton.disabled = true;
+                showMessage('Setting new password...', 'loading');
+
+                try {
+                    const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+                    if (error) {
+                        showMessage(`Failed to set password: ${error.message}. Please try again.`, 'error');
+                        console.error('Password update error:', error);
+                    } else {
+                        mainTitle.textContent = 'Password Successfully Reset!';
+                        showMessage('Your password has been changed. You can now log in with your new password.', 'success');
+                        passwordResetForm.style.display = 'none'; // Hide the form
+                        redirectToApp('login_success'); // Redirect to app's login page
+                    }
+                } catch (e) {
+                    showMessage(`An unexpected error occurred: ${e.message}.`, 'error');
+                    console.error('Password update exception:', e);
+                } finally {
+                    resetPasswordButton.disabled = false;
+                }
+            }
+        }); // End of DOMContentLoaded
     </script>
 </body>
 </html>
