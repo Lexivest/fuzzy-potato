@@ -130,8 +130,8 @@
 
     <script>
         // ⚠️ IMPORTANT: Replace with your actual Supabase URL and Anon Key
-        const SUPABASE_URL = 'https://zhflwgfzshtqcfwsvnnv.supabase.co'; // e.g., 'https://abcdefghijk.supabase.co'
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI'; // e.g., 'eyJhbGciOiJIUzI1Ni...'
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // e.g., 'https://abcdefghijk.supabase.co'
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // e.g., 'eyJhbGciOiJIUzI1Ni...'
 
         const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -175,6 +175,9 @@
             const code = params.get('code'); // This is the PKCE code
             const type = params.get('type'); // Supabase also sends a 'type' parameter for certain flows
 
+            console.log('Auth Callback Page Loaded. URL Params:', window.location.search);
+            console.log('Error:', error, 'Code:', code, 'Type:', type);
+
             if (error) {
                 mainTitle.textContent = 'Authentication Error';
                 showMessage(`Error: ${errorDescription || error}. Please try again or contact support.`, 'error');
@@ -191,33 +194,31 @@
 
                     if (sessionError) {
                         mainTitle.textContent = 'Authentication Failed';
-                        showMessage(`Failed to get session: ${sessionError.message}. Please try again.`, 'error');
+                        // Added more specific error message for session exchange failure
+                        showMessage(`Failed to get session: ${sessionError.message}. This link might be invalid or expired. Please request a new one.`, 'error');
                         goToLoginButton.style.display = 'block';
                         goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login_error`;
+                        console.error('Supabase exchangeCodeForSession error:', sessionError);
                         return;
                     }
 
                     // Session successfully established. Now check the event type.
-                    // Supabase's exchangeCodeForSession implicitly handles the 'type' of event.
-                    // If it's a password recovery, the user is now "logged in" with a temporary session
+                    // Supabase's `onAuthStateChange` listener might indicate 'PASSWORD_RECOVERY'
+                    // or the session itself might be temporary.
+                    // For password recovery, the user is now "logged in" with a temporary session
                     // that allows password update.
                     const user = data.user;
                     if (user) {
-                        // Check if this is a password recovery session (user needs to set new password)
-                        // Supabase's `onAuthStateChange` listener might indicate 'PASSWORD_RECOVERY'
-                        // or the session itself might be temporary.
-                        // A common way to detect this is if the user's email is not confirmed
-                        // or if they just came from a recovery link.
-                        // For simplicity, if we got here via a 'code' and it's not a 'signup' type,
-                        // assume it's a password recovery flow.
-                        // The `auth_callback.html` is the `redirectTo` URL.
-                        // Supabase will automatically redirect to this URL with the `code` parameter
-                        // for password recovery and email confirmation.
-
+                        // Check the event type from the URL, or infer from user state
+                        // For password recovery, the user is usually logged in but needs to set a new password.
+                        // For email confirmation, the user is logged in and email is confirmed.
+                        // Supabase's internal redirect for password reset often just sends 'code'.
+                        // We infer password reset if we have a session from a 'code' and no other specific type.
+                        
                         // If the current session is for password recovery, `data.session.user` will be non-null
                         // and the user can update their password.
                         mainTitle.textContent = 'Set New Password';
-                        showMessage('Please enter your new password.', 'info');
+                        showMessage('Please enter your new password below.', 'info');
                         passwordResetForm.style.display = 'block';
                         resetPasswordButton.onclick = handlePasswordReset;
                     } else {
@@ -229,9 +230,10 @@
 
                 } catch (e) {
                     mainTitle.textContent = 'Authentication Error';
-                    showMessage(`An unexpected error occurred: ${e.message}.`, 'error');
+                    showMessage(`An unexpected error occurred during session exchange: ${e.message}.`, 'error');
                     goToLoginButton.style.display = 'block';
                     goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login_error`;
+                    console.error('General exchangeCodeForSession exception:', e);
                 }
             } else if (type === 'signup') {
                  // This branch handles direct email confirmation links for new signups
@@ -239,7 +241,7 @@
                 showMessage('Your email has been successfully confirmed. Opening app...', 'success');
                 redirectToApp('email_confirmed');
             } else {
-                // Default case if no specific auth flow detected (e.g., direct access)
+                // Default case if no specific auth flow detected (e.g., direct access or unknown link)
                 mainTitle.textContent = 'Welcome to Kadazon';
                 showMessage('If you were expecting a specific action, please ensure you clicked a valid link.', 'info');
                 goToLoginButton.style.display = 'block';
