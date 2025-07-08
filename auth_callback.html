@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kadazon Authentication</title>
-    <!-- Supabase JavaScript SDK will be loaded dynamically -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -170,7 +169,7 @@
         // --- Main authentication callback handler ---
         async function handleAuthCallback() {
             // Initialize Supabase client AFTER the SDK is confirmed loaded
-            supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
             const params = new URLSearchParams(window.location.search);
             const error = params.get('error');
@@ -181,7 +180,7 @@
 
             console.log('Auth Callback Page Logic Started. URL Params:', window.location.search);
             console.log('Error:', error, 'Code:', code, 'Type:', type);
-            console.log('Supabase object type:', typeof Supabase); // Verify Supabase is defined
+            console.log('Supabase object type:', typeof supabase); // Verify Supabase is defined
 
             if (error) {
                 mainTitle.textContent = 'Authentication Error';
@@ -231,7 +230,7 @@
                     console.error('General exchangeCodeForSession exception:', e);
                 }
             } else if (type === 'signup') {
-                 // This branch handles direct email confirmation links for new signups
+                // This branch handles direct email confirmation links for new signups
                 mainTitle.textContent = 'Email Confirmed!';
                 showMessage('Your email has been successfully confirmed. Opening app...', 'success');
                 redirectToApp('email_confirmed');
