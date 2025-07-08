@@ -129,8 +129,9 @@
 
     <script>
         // ⚠️ IMPORTANT: Replace with your actual Supabase URL and Anon Key
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // e.g., 'https://abcdefghijk.supabase.co'
-        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // e.g., 'eyJhbGciOiJIUzI1Ni...'
+        // Ensure NO leading/trailing spaces or newlines. Must include https://
+        const SUPABASE_URL = 'https://zhflwgfzshtqcfwsvnnv.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI'; // Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI';
 
         let supabase; // Declare supabase variable
 
@@ -166,9 +167,8 @@
 
         async function handleAuthCallback() {
             // Initialize Supabase client using window.supabase.createClient
-            // This is the CRITICAL FIX for "Supabase is not defined"
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('Supabase client initialized successfully.'); // New log
+            console.log('Supabase client initialized successfully.');
 
             const params = new URLSearchParams(window.location.search);
             const error = params.get('error');
@@ -179,7 +179,7 @@
 
             console.log('Auth Callback Page Logic Started. URL Params:', window.location.search);
             console.log('Error:', error, 'Code:', code, 'Type:', type);
-            console.log('Supabase object type (after init):', typeof window.supabase); // Verify window.supabase is defined
+            console.log('Supabase object type (after init):', typeof window.supabase);
 
             if (error) {
                 mainTitle.textContent = 'Authentication Error';
