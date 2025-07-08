@@ -1,300 +1,289 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kadazon Authentication</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f4f4f4;
-            color: #333;
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
-            width: 100%;
-        }
-        h1 {
-            color: #6200EE; /* Primary color */
-            margin-bottom: 15px;
-        }
-        p {
-            font-size: 1.1em;
-            line-height: 1.6;
-            margin-bottom: 25px;
-        }
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .button {
-            display: inline-block;
-            padding: 12px 25px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.1em;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            cursor: pointer; /* Indicate clickable */
-        }
-        .button.primary {
-            background-color: #6200EE; /* Primary color */
-            color: white;
-        }
-        .button.primary:hover {
-            background-color: #3700B3; /* Darker primary */
-            transform: translateY(-2px);
-        }
-        .button.secondary {
-            background-color: #03DAC6; /* Secondary color */
-            color: black;
-        }
-        .button.secondary:hover {
-            background-color: #018786; /* Darker secondary */
-            transform: translateY(-2px);
-        }
-        .loading {
-            font-style: italic;
-            color: #666;
-        }
-        .error {
-            color: #FF0000;
-            font-weight: bold;
-        }
-        .success {
-            color: #00AA00;
-            font-weight: bold;
-        }
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        .form-group input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box; /* Include padding in width */
-            font-size: 1em;
-        }
-        .form-group input[type="password"]:focus {
-            border-color: #6200EE;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(98, 0, 238, 0.2);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kadazon Authentication</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+      color: #333;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    h1 {
+      color: #6200EE;
+      margin-bottom: 15px;
+    }
+
+    p {
+      font-size: 1.1em;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 12px 25px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.1em;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      cursor: pointer;
+    }
+
+    .button.primary {
+      background-color: #6200EE;
+      color: white;
+    }
+
+    .button.primary:hover {
+      background-color: #3700B3;
+      transform: translateY(-2px);
+    }
+
+    .button.secondary {
+      background-color: #03DAC6;
+      color: black;
+    }
+
+    .button.secondary:hover {
+      background-color: #018786;
+      transform: translateY(-2px);
+    }
+
+    .loading {
+      font-style: italic;
+      color: #666;
+    }
+
+    .error {
+      color: #FF0000;
+      font-weight: bold;
+    }
+
+    .success {
+      color: #00AA00;
+      font-weight: bold;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .form-group input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 1em;
+    }
+
+    .form-group input[type="password"]:focus {
+      border-color: #6200EE;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(98, 0, 238, 0.2);
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1 id="mainTitle">Processing Authentication...</h1>
-        <p id="message" class="loading">Please wait while we process your request.</p>
+  <div class="container">
+    <h1 id="mainTitle">Processing Authentication...</h1>
+    <p id="message" class="loading">Please wait while we process your request.</p>
 
-        <div id="passwordResetForm" style="display: none;">
-            <div class="form-group">
-                <label for="newPassword">New Password:</label>
-                <input type="password" id="newPassword" placeholder="Enter new password" required>
-            </div>
-            <div class="form-group">
-                <label for="confirmPassword">Confirm Password:</label>
-                <input type="password" id="confirmPassword" placeholder="Confirm new password" required>
-            </div>
-            <button id="resetPasswordButton" class="button primary">Set New Password</button>
-        </div>
-
-        <div class="button-group">
-            <a href="#" id="openAppButton" class="button primary" style="display: none;">Open Kadazon App</a>
-            <a href="#" id="goToLoginButton" class="button secondary" style="display: none;">Go to Login Page</a>
-        </div>
+    <div id="passwordResetForm" style="display: none;">
+      <div class="form-group">
+        <label for="newPassword">New Password:</label>
+        <input type="password" id="newPassword" placeholder="Enter new password" required />
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password:</label>
+        <input type="password" id="confirmPassword" placeholder="Confirm new password" required />
+      </div>
+      <button id="resetPasswordButton" class="button primary">Set New Password</button>
     </div>
 
-    <script>
-        // ⚠️ IMPORTANT: Replace with your actual Supabase URL and Anon Key
-        const SUPABASE_URL = 'https://zhflwgfzshtqcfwsvnnv.supabase.co'; // e.g., 'https://abcdefghijk.supabase.co'
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI'; // e.g., 'eyJhbGciOiJIUzI1Ni...'
+    <div class="button-group">
+      <a href="#" id="openAppButton" class="button primary" style="display: none;">Open Kadazon App</a>
+      <a href="#" id="goToLoginButton" class="button secondary" style="display: none;">Go to Login Page</a>
+    </div>
+  </div>
 
-        // Declare supabase variable globally or in a scope accessible by handleAuthCallback
-        let supabase;
+  <script>
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // e.g. https://xyzcompany.supabase.co
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
-        const mainTitle = document.getElementById('mainTitle');
-        const messageElement = document.getElementById('message');
-        const passwordResetForm = document.getElementById('passwordResetForm');
-        const newPasswordInput = document.getElementById('newPassword');
-        const confirmPasswordInput = document.getElementById('confirmPassword');
-        const resetPasswordButton = document.getElementById('resetPasswordButton');
-        const openAppButton = document.getElementById('openAppButton');
-        const goToLoginButton = document.getElementById('goToLoginButton');
+    let supabase;
 
-        // Base deep link for your app's authentication entry point
-        const APP_DEEP_LINK_BASE = 'com.example.kadazon://auth';
+    const mainTitle = document.getElementById('mainTitle');
+    const messageElement = document.getElementById('message');
+    const passwordResetForm = document.getElementById('passwordResetForm');
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const resetPasswordButton = document.getElementById('resetPasswordButton');
+    const openAppButton = document.getElementById('openAppButton');
+    const goToLoginButton = document.getElementById('goToLoginButton');
 
-        function showMessage(msg, type = 'info') {
-            messageElement.textContent = msg;
-            messageElement.classList.remove('loading', 'error', 'success');
-            messageElement.classList.add(type);
-        }
+    const APP_DEEP_LINK_BASE = 'com.example.kadazon://auth';
 
-        function redirectToApp(type = 'login_success') {
-            const deepLink = `${APP_DEEP_LINK_BASE}?type=${type}`;
-            openAppButton.href = deepLink;
-            goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login`; // Always provide a way to login
-            
-            openAppButton.style.display = 'block';
+    function showMessage(msg, type = 'info') {
+      messageElement.textContent = msg;
+      messageElement.classList.remove('loading', 'error', 'success');
+      messageElement.classList.add(type);
+    }
+
+    function redirectToApp(type = 'login_success') {
+      const deepLink = `${APP_DEEP_LINK_BASE}?type=${type}`;
+      openAppButton.href = deepLink;
+      goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login`;
+      openAppButton.style.display = 'block';
+      goToLoginButton.style.display = 'block';
+      setTimeout(() => {
+        window.location.href = deepLink;
+      }, 1000);
+    }
+
+    async function handleAuthCallback() {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      const params = new URLSearchParams(window.location.search);
+      const error = params.get('error');
+      const errorCode = params.get('error_code');
+      const errorDescription = params.get('error_description');
+      const code = params.get('code');
+      const type = params.get('type');
+
+      console.log('Auth Callback Params:', window.location.search);
+      if (error) {
+        mainTitle.textContent = 'Authentication Error';
+        showMessage(`Error: ${errorDescription || error}.`, 'error');
+        goToLoginButton.style.display = 'block';
+        goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login_error`;
+        return;
+      }
+
+      if (code) {
+        showMessage('Exchanging code for session...', 'loading');
+        try {
+          const { data, error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
+          if (sessionError) {
+            mainTitle.textContent = 'Authentication Failed';
+            showMessage(`Failed: ${sessionError.message}`, 'error');
             goToLoginButton.style.display = 'block';
+            goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login_error`;
+            return;
+          }
 
-            // Attempt to open the app automatically
-            setTimeout(() => {
-                window.location.href = deepLink;
-            }, 1000); // Small delay to allow message to be seen
+          const user = data.user;
+          if (user) {
+            mainTitle.textContent = 'Set New Password';
+            showMessage('Enter your new password below.', 'info');
+            passwordResetForm.style.display = 'block';
+            resetPasswordButton.onclick = handlePasswordReset;
+          } else {
+            mainTitle.textContent = 'Authentication Successful';
+            showMessage('Opening app...', 'success');
+            redirectToApp('email_confirmed');
+          }
+        } catch (e) {
+          mainTitle.textContent = 'Authentication Error';
+          showMessage(`Unexpected error: ${e.message}`, 'error');
+          goToLoginButton.style.display = 'block';
         }
+      } else if (type === 'signup') {
+        mainTitle.textContent = 'Email Confirmed!';
+        showMessage('Your email has been confirmed. Opening app...', 'success');
+        redirectToApp('email_confirmed');
+      } else {
+        mainTitle.textContent = 'Welcome to Kadazon';
+        showMessage('Please click a valid link.', 'info');
+        goToLoginButton.style.display = 'block';
+        goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login`;
+      }
+    }
 
-        // --- Main authentication callback handler ---
-        async function handleAuthCallback() {
-            // Initialize Supabase client AFTER the SDK is confirmed loaded
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    async function handlePasswordReset() {
+      const newPassword = newPasswordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
 
-            const params = new URLSearchParams(window.location.search);
-            const error = params.get('error');
-            const errorCode = params.get('error_code');
-            const errorDescription = params.get('error_description');
-            const code = params.get('code'); // This is the PKCE code
-            const type = params.get('type'); // Supabase also sends a 'type' parameter for certain flows
+      if (!newPassword || !confirmPassword) {
+        showMessage('Please fill both fields.', 'error');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showMessage('Passwords do not match.', 'error');
+        return;
+      }
+      if (newPassword.length < 6) {
+        showMessage('Password must be at least 6 characters.', 'error');
+        return;
+      }
 
-            console.log('Auth Callback Page Logic Started. URL Params:', window.location.search);
-            console.log('Error:', error, 'Code:', code, 'Type:', type);
-            console.log('Supabase object type:', typeof supabase); // Verify Supabase is defined
+      resetPasswordButton.disabled = true;
+      showMessage('Setting new password...', 'loading');
 
-            if (error) {
-                mainTitle.textContent = 'Authentication Error';
-                showMessage(`Error: ${errorDescription || error}. Please try again or contact support.`, 'error');
-                goToLoginButton.style.display = 'block';
-                goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login_error`;
-                return;
-            }
-
-            if (code) {
-                // This is a PKCE flow, exchange the code for a session
-                showMessage('Exchanging code for session...', 'loading');
-                try {
-                    const { data, error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
-
-                    if (sessionError) {
-                        mainTitle.textContent = 'Authentication Failed';
-                        showMessage(`Failed to get session: ${sessionError.message}. This link might be invalid or expired. Please request a new one.`, 'error');
-                        goToLoginButton.style.display = 'block';
-                        goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login_error`;
-                        console.error('Supabase exchangeCodeForSession error:', sessionError);
-                        return;
-                    }
-
-                    const user = data.user;
-                    if (user) {
-                        // If we successfully exchanged a code for a session, and we have a user,
-                        // it's highly likely a password recovery flow or a fresh signup confirmation.
-                        // For password recovery, the user is now "logged in" with a temporary session
-                        // that allows password update.
-                        mainTitle.textContent = 'Set New Password';
-                        showMessage('Please enter your new password below.', 'info');
-                        passwordResetForm.style.display = 'block';
-                        resetPasswordButton.onclick = handlePasswordReset;
-                    } else {
-                        // This might be an email confirmation or other general auth success
-                        mainTitle.textContent = 'Authentication Successful';
-                        showMessage('Your request has been processed. Opening app...', 'success');
-                        redirectToApp('email_confirmed'); // Or general_auth_success
-                    }
-
-                } catch (e) {
-                    mainTitle.textContent = 'Authentication Error';
-                    showMessage(`An unexpected error occurred during session exchange: ${e.message}.`, 'error');
-                    goToLoginButton.style.display = 'block';
-                    goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login_error`;
-                    console.error('General exchangeCodeForSession exception:', e);
-                }
-            } else if (type === 'signup') {
-                // This branch handles direct email confirmation links for new signups
-                mainTitle.textContent = 'Email Confirmed!';
-                showMessage('Your email has been successfully confirmed. Opening app...', 'success');
-                redirectToApp('email_confirmed');
-            } else {
-                // Default case if no specific auth flow detected (e.g., direct access or unknown link)
-                mainTitle.textContent = 'Welcome to Kadazon';
-                showMessage('If you were expecting a specific action, please ensure you clicked a valid link.', 'info');
-                goToLoginButton.style.display = 'block';
-                goToLoginButton.href = `${APP_DEEP_LINK_BASE}?type=login`;
-            }
+      try {
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) {
+          showMessage(`Error: ${error.message}`, 'error');
+        } else {
+          mainTitle.textContent = 'Password Reset!';
+          showMessage('You can now log in with your new password.', 'success');
+          passwordResetForm.style.display = 'none';
+          redirectToApp('login_success');
         }
+      } catch (e) {
+        showMessage(`Unexpected error: ${e.message}`, 'error');
+      } finally {
+        resetPasswordButton.disabled = false;
+      }
+    }
 
-        async function handlePasswordReset() {
-            const newPassword = newPasswordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
-
-            if (!newPassword || !confirmPassword) {
-                showMessage('Please fill in both password fields.', 'error');
-                return;
-            }
-            if (newPassword !== confirmPassword) {
-                showMessage('Passwords do not match.', 'error');
-                return;
-            }
-            if (newPassword.length < 6) { // Basic validation
-                showMessage('Password must be at least 6 characters long.', 'error');
-                return;
-            }
-
-            resetPasswordButton.disabled = true;
-            showMessage('Setting new password...', 'loading');
-
-            try {
-                const { error } = await supabase.auth.updateUser({ password: newPassword });
-
-                if (error) {
-                    showMessage(`Failed to set password: ${error.message}. Please try again.`, 'error');
-                    console.error('Password update error:', error);
-                } else {
-                    mainTitle.textContent = 'Password Successfully Reset!';
-                    showMessage('Your password has been changed. You can now log in with your new password.', 'success');
-                    passwordResetForm.style.display = 'none'; // Hide the form
-                    redirectToApp('login_success'); // Redirect to app's login page
-                }
-            } catch (e) {
-                showMessage(`An unexpected error occurred: ${e.message}.`, 'error');
-                console.error('Password update exception:', e);
-            } finally {
-                resetPasswordButton.disabled = false;
-            }
-        }
-
-        // Dynamically load Supabase SDK and then run main logic
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-        script.onload = () => {
-            console.log('Supabase SDK loaded successfully via dynamic script.'); // NEW DEBUG LOG
-            handleAuthCallback(); // Now call the main handler
-        };
-        script.onerror = (e) => {
-            console.error('Failed to load Supabase SDK:', e);
-            showMessage('Failed to load necessary components. Please refresh or try again later.', 'error');
-        };
-        document.body.appendChild(script);
-    </script>
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+    script.onload = () => {
+      console.log('Supabase SDK loaded.');
+      handleAuthCallback();
+    };
+    script.onerror = () => {
+      console.error('Failed to load Supabase SDK.');
+      showMessage('Could not load Supabase. Try again later.', 'error');
+    };
+    document.body.appendChild(script);
+  </script>
 </body>
 </html>
