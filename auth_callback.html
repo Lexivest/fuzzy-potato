@@ -129,10 +129,12 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', async () => { // Made async to use await inside
+        document.addEventListener('DOMContentLoaded', async () => {
             // ⚠️ IMPORTANT: Replace with your actual Supabase URL and Anon Key
             const SUPABASE_URL = 'https://zhflwgfzshtqcfwsvnnv.supabase.co'; // e.g., 'https://abcdefghijk.supabase.co'
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI'; // e.g., 'eyJhbGciOiJIUzI1Ni...'
+
+            console.log('DOMContentLoaded fired. Attempting to initialize Supabase client.'); // NEW DEBUG LOG
 
             // Initialize Supabase client ONLY after DOM is loaded and SDK is available
             const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
