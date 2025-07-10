@@ -1,82 +1,61 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>Kadazon – Authentication</title>
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<style>
- body{font-family:system-ui,-apple-system,sans-serif;display:flex;
-       align-items:center;justify-content:center;height:100vh;margin:0;background:#f7f7f7}
- .card{max-width:380px;width:92%;padding:2rem;border-radius:12px;background:#fff;
-       text-align:center;box-shadow:0 2px 8px #0002}
- h2{margin:0 0 .6rem;font-weight:600} p{line-height:1.5;margin:.4rem 0}
-</style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.6/dist/umd/supabase.min.js"></script>
+  <meta charset="utf-8" />
+  <title>Kadazon – Authentication</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{
+      font-family:system-ui,-apple-system,sans-serif;
+      display:flex;align-items:center;justify-content:center;
+      height:100vh;margin:0;background:#f7f7f7
+    }
+    .card{
+      max-width:380px;width:92%;padding:2rem;border-radius:12px;background:#fff;
+      text-align:center;box-shadow:0 2px 8px #0002
+    }
+    h2{margin:.2rem 0 .6rem;font-weight:600}
+    p{line-height:1.5;margin:.4rem 0}
+  </style>
 </head>
 <body>
-<div class="card" id="card"><h2>Processing…</h2><p>Please wait a moment.</p></div>
+  <div class="card" id="card">
+    <h2>Processing…</h2>
+    <p>Please wait a moment.</p>
+  </div>
 
 <script>
-(async () => {
+(() => {
   const card = document.getElementById('card');
-
-  /* 1.  YOUR PROJECT */
-  const SUPABASE_URL = 'https://zhflwgfzshtqcfwsvnnv.supabase.co';   // ← replace
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI';                          // ← replace
-  const supabase      = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  /* 2.  Parse URL parameters */
   const query = new URLSearchParams(location.search.slice(1));
-  const hash  = new URLSearchParams(location.hash.slice(1));
 
+  /* 1. Supabase appended an error (expired / already‑used link) */
   if (query.has('error')) {
     card.innerHTML =
-      '<h2>Link invalid or expired</h2><p>' +
-      (query.get('error_description') || 'Please request a new email from the Kadazon app.') +
-      '</p>';
+      '<h2>Link invalid or expired</h2>' +
+      '<p>' + (query.get('error_description')
+        || 'Please request a new email from the Kadazon app.') + '</p>';
     return;
   }
 
-  try {
-    /* ── Modern flow: ?code=... plus #code_verifier=... */
-    if (query.has('code') && hash.has('code_verifier')) {
-      const { error } = await supabase.auth.exchangeCodeForSession({
-        authCode:     query.get('code'),
-        codeVerifier: hash.get('code_verifier'),
-      });
-      if (error) throw error;
+  /* 2. Supabase appended a success code */
+  if (query.has('code')) {
+    const flow = query.get('type');  // signup | recovery | magiclink
+    const msg  = flow === 'recovery'
+      ? 'Password reset successful!'
+      : 'Email verified!';
 
-      const msg = query.get('type') === 'recovery'
-        ? 'Password reset successful!'
-        : 'Email verified!';
-      card.innerHTML =
-        '<h2>' + msg + '</h2><p>You may now return to the Kadazon app and log in.</p>';
-      return;
-    }
-
-    /* ── Legacy hash flow with access / refresh tokens */
-    if (hash.has('access_token') && hash.has('refresh_token')) {
-      const { error } = await supabase.auth.setSession({
-        access_token:  hash.get('access_token'),
-        refresh_token: hash.get('refresh_token'),
-      });
-      if (error) throw error;
-
-      const msg = hash.get('type') === 'recovery'
-        ? 'Password reset successful!'
-        : 'Email verified!';
-      card.innerHTML =
-        '<h2>' + msg + '</h2><p>You may now return to the Kadazon app and log in.</p>';
-      return;
-    }
-
-    throw new Error('No auth code or token found.');
-  } catch (err) {
     card.innerHTML =
-      '<h2>Something went wrong</h2><p>' +
-      (err.message || 'Unable to process this link.') +
-      '</p><p>Please request a fresh email from the Kadazon app.</p>';
+      '<h2>' + msg + '</h2>' +
+      '<p>You may now return to the Kadazon app and log in.</p>';
+    return;
   }
+
+  /* 3. Fallback – no code, no error */
+  card.innerHTML =
+    '<h2>Something went wrong</h2>' +
+    '<p>No authentication information found in this link.</p>' +
+    '<p>Please request a fresh email from the Kadazon app.</p>';
 })();
 </script>
 </body>
