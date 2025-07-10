@@ -1,62 +1,107 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Kadazon – Authentication</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    body{
-      font-family:system-ui,-apple-system,sans-serif;
-      display:flex;align-items:center;justify-content:center;
-      height:100vh;margin:0;background:#f7f7f7
-    }
-    .card{
-      max-width:380px;width:92%;padding:2rem;border-radius:12px;background:#fff;
-      text-align:center;box-shadow:0 2px 8px #0002
-    }
-    h2{margin:.2rem 0 .6rem;font-weight:600}
-    p{line-height:1.5;margin:.4rem 0}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kadazon Authentication Redirect</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #6200EE;
+            margin-bottom: 15px;
+        }
+        p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .loading {
+            font-style: italic;
+            color: #666;
+        }
+        .error {
+            color: #FF0000;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-  <div class="card" id="card">
-    <h2>Processing…</h2>
-    <p>Please wait a moment.</p>
-  </div>
+    <div class="container">
+        <h1 id="mainTitle">Processing Authentication...</h1>
+        <p id="message" class="loading">Redirecting you back to the Kadazon app.</p>
+    </div>
 
-<script>
-(() => {
-  const card = document.getElementById('card');
-  const query = new URLSearchParams(location.search.slice(1));
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainTitle = document.getElementById('mainTitle');
+            const messageElement = document.getElementById('message');
+            const params = new URLSearchParams(window.location.search);
 
-  /* 1. Supabase appended an error (expired / already‑used link) */
-  if (query.has('error')) {
-    card.innerHTML =
-      '<h2>Link invalid or expired</h2>' +
-      '<p>' + (query.get('error_description')
-        || 'Please request a new email from the Kadazon app.') + '</p>';
-    return;
-  }
+            const error = params.get('error');
+            const errorCode = params.get('error_code');
+            const errorDescription = params.get('error_description');
+            const code = params.get('code'); // The PKCE code
+            const type = params.get('type'); // e.g., 'recovery', 'signup'
 
-  /* 2. Supabase appended a success code */
-  if (query.has('code')) {
-    const flow = query.get('type');  // signup | recovery | magiclink
-    const msg  = flow === 'recovery'
-      ? 'Password reset successful!'
-      : 'Email verified!';
+            console.log('Auth Callback Web Page Loaded. URL Params:', window.location.search);
+            console.log('Error:', error, 'Code:', code, 'Type:', type);
 
-    card.innerHTML =
-      '<h2>' + msg + '</h2>' +
-      '<p>You may now return to the Kadazon app and log in.</p>';
-    return;
-  }
+            let deepLink = 'com.example.kadazon://auth'; // Base deep link for your app
 
-  /* 3. Fallback – no code, no error */
-  card.innerHTML =
-    '<h2>Something went wrong</h2>' +
-    '<p>No authentication information found in this link.</p>' +
-    '<p>Please request a fresh email from the Kadazon app.</p>';
-})();
-</script>
+            if (error) {
+                mainTitle.textContent = 'Authentication Error';
+                messageElement.textContent = `Error: ${errorDescription || error}. Please try again or contact support.`;
+                messageElement.classList.remove('loading');
+                messageElement.classList.add('error');
+                deepLink += `?type=login_error&error_code=${errorCode || ''}&error_description=${encodeURIComponent(errorDescription || error || '')}`;
+            } else if (code) {
+                // For PKCE flow, we just pass the code back to the app.
+                // The app will then exchange it for a session using its stored code_verifier.
+                mainTitle.textContent = 'Redirecting...';
+                messageElement.textContent = 'Completing authentication in the Kadazon app.';
+                deepLink += `?type=${type || 'general_auth_success'}&code=${code}`;
+            } else if (type) {
+                // For other types like 'signup' if they don't use PKCE or have direct tokens
+                mainTitle.textContent = 'Redirecting...';
+                messageElement.textContent = 'Completing authentication in the Kadazon app.';
+                deepLink += `?type=${type}`;
+                // If access_token/refresh_token were directly in URL (less common with PKCE)
+                const accessToken = params.get('access_token');
+                const refreshToken = params.get('refresh_token');
+                if (accessToken && refreshToken) {
+                    deepLink += `&access_token=${accessToken}&refresh_token=${refreshToken}`;
+                }
+            } else {
+                mainTitle.textContent = 'Redirecting...';
+                messageElement.textContent = 'Returning to Kadazon app.';
+                deepLink += `?type=general_auth_success`;
+            }
+
+            // Attempt to open the app automatically
+            setTimeout(() => {
+                window.location.href = deepLink;
+            }, 1000); // Small delay to allow message to be seen
+        });
+    </script>
 </body>
 </html>
