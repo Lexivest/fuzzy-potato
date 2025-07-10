@@ -1,63 +1,65 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Kadazon – Authentication</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    body{font-family:system-ui,-apple-system,sans-serif;display:flex;
-         align-items:center;justify-content:center;height:100vh;margin:0}
-    .card{max-width:360px;padding:2rem;border:1px solid #e0e0e0;
-          border-radius:12px;text-align:center;box-shadow:0 2px 6px #0001}
-    h2{margin-top:0}
-    p{line-height:1.4}
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-</head>
-<body>
-  <div class="card" id="card">
-    <h2>Processing…</h2>
-    <p>Please wait a moment.</p>
-  </div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (async () => {
-  // ── 1. Grab hash‑fragment params Supabase sent
-  const params   = new URLSearchParams(location.hash.slice(1));
-  const type     = params.get('type');          // signup | recovery | magiclink
-  const access   = params.get('access_token');
-  const refresh  = params.get('refresh_token');
-  const card     = document.getElementById('card');
+  const card = document.getElementById('card');
 
-  // ── 2. Init Supabase client (public keys only)
-  const supabase = window.supabase.createClient(
-    'https://zhflwgfzshtqcfwsvnnv.supabase.co',  // ← replace
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI'                      // ← replace
-  );
+  // CONFIG – replace with your project values
+  const SUPABASE_URL  = 'https://zhflwgfzshtqcfwsvnnv.supabase.co';
+  const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI';
+
+  // ── 1. Parse query & hash
+  const query  = new URLSearchParams(location.search.slice(1));
+  const hash   = new URLSearchParams(location.hash.slice(1));
+
+  // ── 2. Handle error in query (otp_expired, etc.)
+  if (query.has('error')) {
+    card.innerHTML = `
+      <h2>Link invalid or expired</h2>
+      <p>${query.get('error_description') ?? 'Please request a new email.'}</p>
+    `;
+    return;
+  }
+
+  // ── 3. Init Supabase client
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   try {
-    // ── 3. Finish auth on the web side
-    const { error } = await supabase.auth.setSession({
-      access_token: access,
-      refresh_token: refresh,
-    });
-    if (error) throw error;
+    // A) Flow with ?code=... (recommended by Supabase v2)
+    if (query.has('code')) {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(query.get('code'));
+      if (error) throw error;
 
-    // ── 4. Show success message
-    card.innerHTML = `
-      <h2>${type === 'recovery'
-        ? 'Password reset successful!'
-        : 'Email verified!'}</h2>
-      <p>You can now return to the Kadazon app and log in with your credentials.</p>
-    `;
+      card.innerHTML = `
+        <h2>Email verified!</h2>
+        <p>You can now return to the Kadazon app and log in.</p>
+      `;
+      return;
+    }
+
+    // B) Old hash‑style flow with #access_token
+    if (hash.has('access_token') && hash.has('refresh_token')) {
+      const { error } = await supabase.auth.setSession({
+        access_token:  hash.get('access_token'),
+        refresh_token: hash.get('refresh_token'),
+      });
+      if (error) throw error;
+
+      const type = hash.get('type');
+      card.innerHTML = `
+        <h2>${type === 'recovery' ? 'Password reset successful!' : 'Email verified!'}</h2>
+        <p>You can now return to the Kadazon app and log in.</p>
+      `;
+      return;
+    }
+
+    // C) Fallback – unknown format
+    throw new Error('Auth session missing');
   } catch (err) {
     card.innerHTML = `
       <h2>Something went wrong</h2>
-      <p>${err?.message ?? 'Unexpected error'}</p>
-      <p>Please try the link again or contact support.</p>
+      <p>${err.message}</p>
+      <p>Please try again or request a fresh email from the app.</p>
     `;
   }
 })();
 </script>
-</body>
-</html>
