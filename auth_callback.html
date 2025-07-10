@@ -1,52 +1,73 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>Kadazon – Auth</title>
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<style>
- body{font-family:system-ui,-apple-system,sans-serif;display:flex;
-       align-items:center;justify-content:center;height:100vh;margin:0}
- .card{max-width:380px;width:92%;padding:2rem;border-radius:12px;
-       background:#fff;text-align:center;box-shadow:0 2px 8px #0002}
-</style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <meta charset="utf-8" />
+  <title>Kadazon – Authentication</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family:system-ui,-apple-system,sans-serif;display:flex;
+         align-items:center;justify-content:center;height:100vh;margin:0;
+         background:#f7f7f7}
+    .card{max-width:380px;width:92%;padding:2rem;border-radius:12px;
+          background:#fff;text-align:center;box-shadow:0 2px 8px #0003}
+    h2{margin-top:0;font-weight:600}
+    p{line-height:1.5}
+  </style>
+
+  <!-- Supabase JS v2 (pinned) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.6/dist/umd/supabase.min.js"></script>
 </head>
 <body>
- <div class="card" id="card">
-   <h2>Processing…</h2>
-   <p>Please wait a moment.</p>
- </div>
+  <div class="card" id="card">
+    <h2>Processing…</h2>
+    <p>Please wait a moment.</p>
+  </div>
 
 <script>
 (async () => {
+  // ── DOM helper
   const card = document.getElementById('card');
-  const SUPABASE_URL = 'https://zhflwgfzshtqcfwsvnnv.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI';
 
+  // ── 1.  INSERT YOUR PROJECT CREDENTIALS
+  const SUPABASE_URL = 'https://zhflwgfzshtqcfwsvnnv.supabase.co; // ← replace
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI';                        // ← replace
+
+  // Create client from global window.supabase
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // ── 2.  Read query parameters first for ?error or ?code
   const query = new URLSearchParams(location.search.slice(1));
+
+  // Handle explicit error (expired link etc.)
   if (query.has('error')) {
-    card.innerHTML =
-      '<h2>Link invalid or expired</h2><p>' +
-      (query.get('error_description') || 'Please request a new email.') +
-      '</p>';
+    card.innerHTML = `
+      <h2>Link invalid or expired</h2>
+      <p>${query.get('error_description') || 'Please request a new email from the Kadazon app.'}</p>
+    `;
     return;
   }
 
   try {
-    const { error } = await supabase.auth.getSessionFromURL({ storeSession: true });
+    // ── 3.  Exchange code/hash for a session and store it (covers all flows)
+    const { error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
     if (error) throw error;
 
-    const msg = query.get('type') === 'recovery'
-      ? 'Password reset successful!' : 'Email verified!';
-    card.innerHTML =
-      '<h2>' + msg + '</h2><p>You may now return to the Kadazon app and log in.</p>';
+    const flowType = query.get('type');
+    const successMessage =
+      flowType === 'recovery'
+        ? 'Password reset successful!'
+        : 'Email verified!';
+
+    card.innerHTML = `
+      <h2>${successMessage}</h2>
+      <p>You may now return to the Kadazon app and log in.</p>
+    `;
   } catch (err) {
-    card.innerHTML =
-      '<h2>Something went wrong</h2><p>' +
-      err.message + '</p><p>Please request a fresh email.</p>';
+    card.innerHTML = `
+      <h2>Something went wrong</h2>
+      <p>${err.message || 'Unable to process this link.'}</p>
+      <p>Please request a fresh email from the Kadazon app.</p>
+    `;
   }
 })();
 </script>
