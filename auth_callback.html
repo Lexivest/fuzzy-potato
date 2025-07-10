@@ -1,42 +1,70 @@
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Kadazon – Authentication</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,sans-serif;
+         display:flex;align-items:center;justify-content:center;
+         height:100vh;margin:0;background:#f7f7f7}
+    .card{max-width:380px;width:92%;padding:2rem;
+          border-radius:12px;background:#fff;
+          box-shadow:0 2px 8px #0002;text-align:center}
+    h2{margin-top:0;font-weight:600}
+    p{line-height:1.5}
+  </style>
+
+  <!-- Supabase JS UMD bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <div class="card" id="card">
+    <h2>Processing…</h2>
+    <p>Please wait a moment.</p>
+  </div>
+
 <script>
 (async () => {
-  const card = document.getElementById('card');
+  const cardEl = document.getElementById('card');
+  if (!cardEl) return;
 
-  // CONFIG – replace with your project values
-  const SUPABASE_URL = 'https://zhflwgfzshtqcfwsvnnv.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI';
+  // ╭─────── 1.  PROJECT SETTINGS ─────────────────────────╮
+  const SUPABASE_URL = 'https://zhflwgfzshtqcfwsvnnv.supabase.co'; // ← replace
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI';                       // ← replace
+  // ╰───────────────────────────────────────────────────────╯
 
-  // ── 1. Parse query & hash
+  // 2. Parse query (?code=.. or ?error=..) and hash (#access_token=..)
   const query = new URLSearchParams(location.search.slice(1));
   const hash  = new URLSearchParams(location.hash.slice(1));
 
-  // ── 2. Handle error in query (otp_expired, etc.)
+  // 3. Handle error responses first (e.g., otp_expired)
   if (query.has('error')) {
-    card.innerHTML = `
+    cardEl.innerHTML = `
       <h2>Link invalid or expired</h2>
-      <p>${query.get('error_description') ?? 'Please request a new email.'}</p>
+      <p>${query.get('error_description') ?? 'Please request a new email from the Kadazon app.'}</p>
     `;
     return;
   }
 
-  // ── 3. Init Supabase client via window.supabase
+  // 4. Initialise Supabase client through the global window.supabase
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   try {
-    // A) Modern ?code=... flow
+    // A) Modern flow: query contains ?code=XXXX
     if (query.has('code')) {
       const { error } = await supabase.auth.exchangeCodeForSession(query.get('code'));
       if (error) throw error;
 
-      card.innerHTML = `
+      cardEl.innerHTML = `
         <h2>Email verified!</h2>
-        <p>You can now return to the Kadazon app and log in.</p>
+        <p>You may now return to the Kadazon app and log in.</p>
       `;
       return;
     }
 
-    // B) Legacy hash flow #access_token=...
+    // B) Legacy flow: hash fragment has #access_token=...
     if (hash.has('access_token') && hash.has('refresh_token')) {
       const { error } = await supabase.auth.setSession({
         access_token:  hash.get('access_token'),
@@ -44,22 +72,26 @@
       });
       if (error) throw error;
 
-      const type = hash.get('type');
-      card.innerHTML = `
-        <h2>${type === 'recovery' ? 'Password reset successful!' : 'Email verified!'}</h2>
-        <p>You can now return to the Kadazon app and log in.</p>
+      const type = hash.get('type');  // 'recovery' | 'signup' | 'magiclink'
+      cardEl.innerHTML = `
+        <h2>${type === 'recovery'
+          ? 'Password reset successful!'
+          : 'Email verified!'}</h2>
+        <p>You may now return to the Kadazon app and log in.</p>
       `;
       return;
     }
 
-    // C) Fallback
-    throw new Error('Auth session missing');
+    // C) No valid params:
+    throw new Error('Auth session missing or link already used.');
   } catch (err) {
-    card.innerHTML = `
+    cardEl.innerHTML = `
       <h2>Something went wrong</h2>
-      <p>${err.message}</p>
-      <p>Please try again or request a fresh email from the app.</p>
+      <p>${err.message ?? 'Unexpected error'}</p>
+      <p>Please try again or request a fresh email from the Kadazon app.</p>
     `;
   }
 })();
 </script>
+</body>
+</html>
