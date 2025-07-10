@@ -4,12 +4,12 @@
   const card = document.getElementById('card');
 
   // CONFIG – replace with your project values
-  const SUPABASE_URL  = 'https://zhflwgfzshtqcfwsvnnv.supabase.co';
-  const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI';
+  const SUPABASE_URL = 'https://zhflwgfzshtqcfwsvnnv.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpoZmx3Z2Z6c2h0cWNmd3N2bm52Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2MzIyMzIsImV4cCI6MjA2NTIwODIzMn0.bjDDebogf3DzsQlIXy_Dc-g2H0oi2dRf6dCU40zqGMI';
 
   // ── 1. Parse query & hash
-  const query  = new URLSearchParams(location.search.slice(1));
-  const hash   = new URLSearchParams(location.hash.slice(1));
+  const query = new URLSearchParams(location.search.slice(1));
+  const hash  = new URLSearchParams(location.hash.slice(1));
 
   // ── 2. Handle error in query (otp_expired, etc.)
   if (query.has('error')) {
@@ -20,13 +20,13 @@
     return;
   }
 
-  // ── 3. Init Supabase client
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // ── 3. Init Supabase client via window.supabase
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   try {
-    // A) Flow with ?code=... (recommended by Supabase v2)
+    // A) Modern ?code=... flow
     if (query.has('code')) {
-      const { data, error } = await supabase.auth.exchangeCodeForSession(query.get('code'));
+      const { error } = await supabase.auth.exchangeCodeForSession(query.get('code'));
       if (error) throw error;
 
       card.innerHTML = `
@@ -36,7 +36,7 @@
       return;
     }
 
-    // B) Old hash‑style flow with #access_token
+    // B) Legacy hash flow #access_token=...
     if (hash.has('access_token') && hash.has('refresh_token')) {
       const { error } = await supabase.auth.setSession({
         access_token:  hash.get('access_token'),
@@ -52,7 +52,7 @@
       return;
     }
 
-    // C) Fallback – unknown format
+    // C) Fallback
     throw new Error('Auth session missing');
   } catch (err) {
     card.innerHTML = `
